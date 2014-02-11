@@ -1,20 +1,20 @@
 
 var util = Kalendae.util = {
-	
+
 	isIE8: function() {
-	    return !!( (/msie 8./i).test(navigator.appVersion) && !(/opera/i).test(navigator.userAgent) && window.ActiveXObject && XDomainRequest && !window.msPerformance );
+		return !!( (/msie 8./i).test(navigator.appVersion) && !(/opera/i).test(navigator.userAgent) && window.ActiveXObject && XDomainRequest && !window.msPerformance );
 	},
-	
+
 // ELEMENT FUNCTIONS
 
 	$: function (elem) {
 		return (typeof elem == 'string') ? document.getElementById(elem) : elem;
 	},
-	
+
 	$$: function (selector) {
 		return document.querySelectorAll(selector);
 	},
-	
+
 	make: function (tagName, attributes, attach) {
 		var k, e = document.createElement(tagName);
 		if (!!attributes) for (k in attributes) if (attributes.hasOwnProperty(k)) e.setAttribute(k, attributes[k]);
@@ -28,7 +28,7 @@ var util = Kalendae.util = {
 		// shamelessly copied from jQuery
 		return elem.offsetWidth > 0 || elem.offsetHeight > 0;
 	},
-	
+
 	getStyle: function (elem, styleProp) {
 		var y, s;
 		if (elem.currentStyle) {
@@ -39,8 +39,15 @@ var util = Kalendae.util = {
 		}
 		return y;
 	},
-	
-	domReady:function (f){/in/.test(document.readyState) ? setTimeout(function() {util.domReady(f);},9) : f()},
+
+	domReady: function (f) {
+		var state = document.readyState;
+		if (state === 'complete' || state === 'interactive') {
+			f();
+		} else {
+			setTimeout(function() { util.domReady(f); }, 9);
+		}
+	},
 
 	// Adds a listener callback to a DOM element which is fired on a specified
 	// event.  Callback is sent the event object and the element that triggered the event
@@ -75,7 +82,19 @@ var util = Kalendae.util = {
 			elem.removeEventListener(event, listener, false);
 		}
 	},
-	
+
+	fireEvent: function (elem, event) {
+		if (document.createEvent) {
+			var e = document.createEvent('HTMLEvents');
+			e.initEvent(event, false, true);
+			elem.dispatchEvent(e);
+		} else if (document.createEventObject) {
+			elem.fireEvent('on' + event) ;
+		} else if (typeof elem['on' + event] == 'function' ) {
+			elem['on' + event]();
+		}
+	},
+
 	hasClassName: function(elem, className) { //copied and modified from Prototype.js
 		if (!(elem = util.$(elem))) return false;
 		var eClassName = elem.className;
@@ -106,19 +125,19 @@ var util = Kalendae.util = {
 		} while ((elem = elem.parentNode) && elem != window.document.body);
 		return null;
 	},
-	
+
 	getPosition: function (elem, isInner) {
 		var x = elem.offsetLeft,
 			y = elem.offsetTop,
 			r = {};
-			
+
 		if (!isInner) {
 			while ((elem = elem.offsetParent)) {
 				x += elem.offsetLeft;
 				y += elem.offsetTop;
 			}
 		}
-		
+
 		r[0] = r.left = x;
 		r[1] = r.top = y;
 		return r;
@@ -131,15 +150,15 @@ var util = Kalendae.util = {
 	getWidth: function (elem) {
 		return elem.offsetWidth || elem.scrollWidth;
 	},
-	
-	
-// TEXT FUNCTIONS	
-	
+
+
+// TEXT FUNCTIONS
+
 	trimString: function (input) {
 		return input.replace(/^\s+/, '').replace(/\s+$/, '');
 	},
-	
-	
+
+
 // OBJECT FUNCTIONS
 
 	merge: function () {
@@ -147,7 +166,7 @@ var util = Kalendae.util = {
 		 * Syntax: util.extend([true], object1, object2, ... objectN)
 		 * If first argument is true, function will merge recursively.
 		 */
-		
+
 		var deep = (arguments[0]===true),
 			d = {},
 			i = deep?1:0;
@@ -160,23 +179,16 @@ var util = Kalendae.util = {
 				else a[k] = b[k];
 			}
 			return a;
-		}
+		};
 
 		for (; i < arguments.length; i++) {
 			_c(d, arguments[i]);
 		}
 		return d;
 	},
-	
+
 	isArray: function (array) {
-		return !(
-			!array || 
-			(!array.length || array.length === 0) || 
-			typeof array !== 'object' || 
-			!array.constructor || 
-			array.nodeType || 
-			array.item 
-		);
+		return Object.prototype.toString.call(array) == "[object Array]";
 	}
 };
 
